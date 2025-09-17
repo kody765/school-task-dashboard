@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>School Project Dashboard</title>
+    <style>
+      body { font-family: sans-serif; background: #f4f4f4; padding: 20px; }
+      header { background: #4a90e2; color: white; padding: 10px; text-align: center; }
+      section { background: white; padding: 15px; border-radius: 8px; margin-top: 20px; }
+      form input, form select, form button { margin: 5px; padding: 8px; font-size: 1em; }
+      ul { list-style: none; padding: 0; }
+      li { margin: 10px 0; padding: 10px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; transition: all 0.3s ease; }
+      .To\ Do { background: #ffe0e0; }
+      .In\ Progress { background: #fff5cc; }
+      .Done { background: #d4f4d7; }
+      button.delete { background: #ff4d4d; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+      .minimized li { font-size: 0.8em; padding: 5px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>📚 School Project Dashboard</h1>
+    </header>
+
+    <section>
+      <h2>Task Tracker</h2>
+      <form onsubmit="event.preventDefault(); addTask();">
+        <input id="name" placeholder="Project name" required>
+        <input id="date" type="date" required>
+        <select id="status">
+          <option>To Do</option>
+          <option>In Progress</option>
+          <option>Done</option>
+        </select>
+        <button type="submit">Add Task</button>
+      </form>
+
+      <input id="search" placeholder="Search tasks..." oninput="filterTasks()" style="margin-top:10px; padding:8px; width:60%;">
+      <select id="sort" onchange="sortTasks()" style="margin-left:10px; padding:8px;">
+        <option value="">Sort by...</option>
+        <option value="status">Status</option>
+        <option value="date">Date</option>
+      </select>
+      <button onclick="toggleMinimize()" style="margin-left:10px; padding:8px;">Minimize View</button>
+
+      <ul id="list"></ul>
+    </section>
+
+    <script>
+      const list = document.getElementById('list');
+      const search = document.getElementById('search');
+
+      function saveTasks() {
+        localStorage.setItem('tasks', list.innerHTML);
+      }
+
+      function loadTasks() {
+        list.innerHTML = localStorage.getItem('tasks') || '';
+        attachDeleteHandlers();
+      }
+
+      function addTask() {
+        const name = document.getElementById('name').value;
+        const date = document.getElementById('date').value;
+        const status = document.getElementById('status').value;
+
+        const item = document.createElement('li');
+        item.className = status;
+        item.setAttribute('data-name', name.toLowerCase());
+        item.setAttribute('data-date', date);
+        item.setAttribute('data-status', status);
+        item.innerHTML = `<span>${name} — ${date} — ${status}</span> <button class="delete">Delete</button>`;
+        list.appendChild(item);
+
+        attachDeleteHandlers();
+        saveTasks();
+        document.querySelector('form').reset();
+      }
+
+      function attachDeleteHandlers() {
+        document.querySelectorAll('.delete').forEach(btn => {
+          btn.onclick = function () {
+            this.parentElement.remove();
+            saveTasks();
+          };
+        });
+      }
+
+      function filterTasks() {
+        const term = search.value.toLowerCase();
+        document.querySelectorAll('#list li').forEach(item => {
+          item.style.display = item.getAttribute('data-name').includes(term) ? 'flex' : 'none';
+        });
+      }
+
+      function sortTasks() {
+        const type = document.getElementById('sort').value;
+        const items = Array.from(document.querySelectorAll('#list li'));
+
+        items.sort((a, b) => {
+          if (type === 'status') {
+            return a.getAttribute('data-status').localeCompare(b.getAttribute('data-status'));
+          } else if (type === 'date') {
+            return a.getAttribute('data-date').localeCompare(b.getAttribute('data-date'));
+          }
+          return 0;
+        });
+
+        items.forEach(item => list.appendChild(item));
+        saveTasks();
+      }
+
+      function toggleMinimize() {
+        list.classList.toggle('minimized');
+      }
+
+      loadTasks();
+    </script>
+  </body>
+</html>
